@@ -1,35 +1,37 @@
-code
-Html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Los Adjetivos - Realtime</title>
+    <title>Pasapalabra Dinámico - Adjetivos</title>
     <style>
         :root { --azul: #0047ab; --verde: #2ecc71; --rojo: #e74c3c; --amarillo: #f1c40f; --blanco: #ffffff; --gris: #7f8c8d; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .screen { display: none; }
         .screen.active { display: block; }
         #rosco-container { position: relative; width: 500px; height: 500px; margin: 40px auto; border-radius: 50%; }
-        .letra { position: absolute; width: 40px; height: 40px; background: var(--azul); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; border: 2px solid #fff; transition: all 0.3s; }
+        .letra { position: absolute; width: 40px; height: 40px; background: var(--azul); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; border: 2px solid #fff; transition: all 0.3s; text-transform: uppercase; }
         .letra.correcta { background: var(--verde); }
         .letra.incorrecta { background: var(--rojo); }
         .letra.activa { transform: scale(1.3); box-shadow: 0 0 15px var(--azul); z-index: 10; border-color: black;}
         .panel-pregunta { text-align: center; margin-top: 20px; padding: 20px; border: 2px solid #eee; border-radius: 10px; }
-        input[type="text"] { padding: 10px; width: 60%; font-size: 1.1rem; border: 2px solid #ddd; border-radius: 5px; }
+        input[type="text"], textarea { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; }
         
-        /* Estilos nuevos para el editor */
-        .editor-row { display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-start; background: #f9f9f9; padding: 10px; border-radius: 5px; }
-        .editor-row textarea { flex: 3; height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical; }
-        .editor-row input { flex: 1; height: 60px; box-sizing: border-box; }
+        /* Editor mejorado */
+        .editor-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        .editor-row input.letra-input { width: 45px; text-align: center; font-weight: bold; text-transform: uppercase; }
+        .editor-row textarea { flex: 3; height: 50px; resize: vertical; }
+        .editor-row input.resp-input { flex: 1; }
+        .btn-del { background: var(--rojo); color: white; padding: 5px 10px; border-radius: 5px; }
 
         button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.3s; margin: 5px; }
         .btn-enviar { background: var(--verde); color: white; }
         .btn-pasar { background: var(--amarillo); color: black; }
         .btn-admin { background: var(--gris); color: white; font-size: 0.8rem; margin-top: 50px; }
         .btn-inicio { background: var(--azul); color: white; font-size: 1.1rem; }
+        .btn-add { background: var(--azul); color: white; width: 100%; margin: 10px 0; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: var(--azul); color: white; }
@@ -38,17 +40,19 @@ Html
 <body>
 
 <div class="container">
+    <!-- INICIO -->
     <div id="screen-inicio" class="screen active" style="text-align: center;">
-        <h1>Pasapalabra Los Adjetivos</h1>
+        <h1>Pasapalabra Personalizable</h1>
         <div style="background: #f9f9f9; padding: 30px; border-radius: 10px; border: 1px solid #ddd;">
             <h3>Acceso Alumno</h3>
-            <input type="text" id="nombre-alumno" placeholder="Escribe tu nombre y apellido...">
+            <input type="text" id="nombre-alumno" placeholder="Tu nombre y apellido..." style="width:80%">
             <br><br>
             <button class="btn-inicio" onclick="startApp()">¡EMPEZAR A JUGAR!</button>
         </div>
         <button class="btn-admin" onclick="accesoProfesor()">Acceso Panel Profesor</button>
     </div>
 
+    <!-- JUEGO -->
     <div id="screen-juego" class="screen">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h2 id="saludo-alumno"></h2>
@@ -56,28 +60,31 @@ Html
         </div>
         <div id="rosco-container"></div>
         <div class="panel-pregunta">
-            <h3 id="letra-actual-display">Cargando...</h3>
-            <!-- Ajustado para que el texto largo se vea bien -->
-            <p id="definicion-display" style="font-size: 1.3rem; min-height: 80px; line-height: 1.4; padding: 0 15px; display: flex; align-items: center; justify-content: center;">Esperando preguntas...</p>
-            <input type="text" id="respuesta-input" placeholder="Escribe tu respuesta...">
+            <h3 id="letra-actual-display">...</h3>
+            <p id="definicion-display" style="font-size: 1.3rem; min-height: 80px;">Cargando rosco...</p>
+            <input type="text" id="respuesta-input" placeholder="Escribe tu respuesta..." autocomplete="off">
             <br><br>
             <button class="btn-enviar" id="btn-validar">ENVIAR RESPUESTA</button>
             <button class="btn-pasar" onclick="pasapalabra()">PASAPALABRA</button>
         </div>
     </div>
 
+    <!-- ADMIN -->
     <div id="screen-admin" class="screen">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Panel Profesor (Tiempo Real)</h2>
-            <button onclick="showScreen('screen-inicio')">Cerrar</button>
+            <h2>Configuración del Rosco</h2>
+            <button onclick="location.reload()">Cerrar</button>
         </div>
-        <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3>1. Configurar Rosco</h3>
-            <p><small>* Puedes estirar las cajas de definición desde la esquina inferior derecha si necesitas más espacio.</small></p>
-            <div id="editor-preguntas" style="max-height: 400px; overflow-y: auto; background: white; padding: 10px; border: 1px solid #ccc;"></div>
-            <button class="btn-enviar" onclick="guardarPreguntasFirebase()" style="width: 100%; margin-top: 10px; font-size: 1.1rem;">SUBIR PREGUNTAS A LA NUBE</button>
+        
+        <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
+            <div id="editor-preguntas" style="max-height: 450px; overflow-y: auto; background: white; padding: 10px; border: 1px solid #ccc;">
+                <!-- Aquí se generan las filas -->
+            </div>
+            <button class="btn-add" onclick="añadirFila()">+ AÑADIR NUEVA LETRA</button>
+            <button class="btn-enviar" onclick="guardarPreguntasFirebase()" style="width: 100%; font-size: 1.2rem;">GUARDAR CAMBIOS EN LA NUBE</button>
         </div>
-        <h3>2. Resultados en Vivo</h3>
+
+        <h3>Resultados en Vivo</h3>
         <table>
             <thead><tr><th>Alumno</th><th>Letra</th><th>Respuesta</th><th>Tiempo</th><th>Resultado</th></tr></thead>
             <tbody id="tabla-respuestas"></tbody>
@@ -104,17 +111,22 @@ Html
     const db = getDatabase(app);
 
     const PASSWORD_PROFESOR = "06411";
-    const letras = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
     let preguntas = [];
     let currentIndex = 0;
     let nombreActual = "";
     let tiempoInicioLetra = 0;
-    let estados = letras.map(() => 'pendiente');
+    let estados = [];
 
+    // --- SINCRONIZACIÓN INICIAL ---
     onValue(ref(db, 'preguntas'), (snapshot) => {
         const data = snapshot.val();
-        if (data) { preguntas = data; } 
-        else { preguntas = letras.map(l => ({ letra: l, def: `Empieza por ${l}: ...`, resp: "ejemplo" })); }
+        if (data) {
+            preguntas = data;
+        } else {
+            // Si está vacío, cargar abecedario por defecto
+            preguntas = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("").map(l => ({ letra: l, def: "", resp: "" }));
+        }
+        estados = preguntas.map(() => 'pendiente');
     });
 
     window.accesoProfesor = () => {
@@ -130,9 +142,53 @@ Html
         document.getElementById(id).classList.add('active');
     };
 
+    // --- LÓGICA DEL EDITOR ---
+    window.renderEditor = () => {
+        const container = document.getElementById('editor-preguntas');
+        container.innerHTML = "";
+        preguntas.forEach((p, i) => {
+            const row = document.createElement('div');
+            row.className = 'editor-row';
+            row.innerHTML = `
+                <input type="text" class="letra-input" value="${p.letra}" id="edit-letra-${i}" maxlength="1">
+                <textarea id="edit-def-${i}" placeholder="Definición...">${p.def}</textarea>
+                <input type="text" class="resp-input" id="edit-resp-${i}" value="${p.resp}" placeholder="Respuesta">
+                <button class="btn-del" onclick="eliminarFila(${i})">✕</button>
+            `;
+            container.appendChild(row);
+        });
+    };
+
+    window.añadirFila = () => {
+        preguntas.push({ letra: "?", def: "", resp: "" });
+        renderEditor();
+    };
+
+    window.eliminarFila = (index) => {
+        if(confirm("¿Eliminar esta letra?")) {
+            preguntas.splice(index, 1);
+            renderEditor();
+        }
+    };
+
+    window.guardarPreguntasFirebase = () => {
+        const nuevas = [];
+        for(let i=0; i < preguntas.length; i++) {
+            nuevas.push({
+                letra: document.getElementById(`edit-letra-${i}`).value.toUpperCase(),
+                def: document.getElementById(`edit-def-${i}`).value,
+                resp: document.getElementById(`edit-resp-${i}`).value.toLowerCase().trim()
+            });
+        }
+        set(ref(db, 'preguntas'), nuevas).then(() => alert("¡Rosco guardado con éxito!"));
+    };
+
+    // --- LÓGICA DEL JUEGO ---
     window.startApp = () => {
         nombreActual = document.getElementById('nombre-alumno').value;
-        if(nombreActual.length < 3) return alert("Escribe tu nombre completo");
+        if(nombreActual.length < 3) return alert("Escribe tu nombre");
+        if(preguntas.length === 0) return alert("El profesor aún no ha configurado preguntas");
+        
         document.getElementById('saludo-alumno').innerText = "Participante: " + nombreActual;
         showScreen('screen-juego');
         dibujarRosco();
@@ -143,25 +199,28 @@ Html
         const container = document.getElementById('rosco-container');
         container.innerHTML = "";
         const radius = 210;
-        letras.forEach((l, i) => {
-            const angle = (i * 360 / letras.length) - 90;
+        const total = preguntas.length;
+
+        preguntas.forEach((p, i) => {
+            const angle = (i * 360 / total) - 90;
             const x = 250 + radius * Math.cos(angle * Math.PI / 180) - 20;
             const y = 250 + radius * Math.sin(angle * Math.PI / 180) - 20;
+            
             const div = document.createElement('div');
             div.id = `letra-${i}`;
             div.className = `letra ${estados[i]}`;
-            div.style.left = `${x}px`; div.style.top = `${y}px`;
-            div.innerText = l;
+            div.style.left = `${x}px`; 
+            div.style.top = `${y}px`;
+            div.innerText = p.letra;
             container.appendChild(div);
         });
         actualizarHighlight();
     }
 
     function mostrarPregunta() {
-        if (preguntas.length === 0) return;
         const p = preguntas[currentIndex];
         document.getElementById('letra-actual-display').innerText = `Letra ${p.letra}`;
-        document.getElementById('definicion-display').innerText = p.def;
+        document.getElementById('definicion-display').innerText = p.def || "(Sin definición)";
         document.getElementById('respuesta-input').value = "";
         document.getElementById('respuesta-input').focus();
         tiempoInicioLetra = Date.now();
@@ -174,10 +233,11 @@ Html
     }
 
     document.getElementById('btn-validar').onclick = () => {
-        const input = document.getElementById('respuesta-input').value.trim();
+        const input = document.getElementById('respuesta-input').value.trim().toLowerCase();
         if(!input) return;
-        const correcta = preguntas[currentIndex].resp.trim().toLowerCase();
-        const esCorrecto = (input.toLowerCase() === correcta);
+        
+        const correcta = preguntas[currentIndex].resp.toLowerCase();
+        const esCorrecto = (input === correcta);
         const tiempo = ((Date.now() - tiempoInicioLetra) / 1000).toFixed(1);
 
         push(ref(db, 'logs'), {
@@ -200,13 +260,15 @@ Html
     function saltarSiguiente() {
         let vueltas = 0;
         let proximo = currentIndex;
-        do {
-            proximo = (proximo + 1) % letras.length;
-            vueltas++;
-        } while (estados[proximo] !== 'pendiente' && vueltas < letras.length);
+        const total = preguntas.length;
 
-        if (vueltas >= letras.length) {
-            alert("¡Has terminado el rosco!");
+        do {
+            proximo = (proximo + 1) % total;
+            vueltas++;
+        } while (estados[proximo] !== 'pendiente' && vueltas < total);
+
+        if (vueltas >= total) {
+            alert("¡Fin del juego!");
             location.reload();
         } else {
             currentIndex = proximo;
@@ -214,30 +276,6 @@ Html
             mostrarPregunta();
         }
     }
-
-    // FUNCIÓN ACTUALIZADA PARA TEXTO LARGO
-    function renderEditor() {
-        const container = document.getElementById('editor-preguntas');
-        container.innerHTML = "";
-        preguntas.forEach((p, i) => {
-            const row = document.createElement('div');
-            row.className = 'editor-row';
-            row.innerHTML = `
-                <strong style="width: 30px; padding-top: 10px;">${p.letra}</strong>
-                <textarea id="edit-def-${i}" placeholder="Definición...">${p.def}</textarea>
-                <input type="text" id="edit-resp-${i}" value="${p.resp}" placeholder="Respuesta">`;
-            container.appendChild(row);
-        });
-    }
-
-    window.guardarPreguntasFirebase = () => {
-        const nuevas = preguntas.map((p, i) => ({
-            letra: p.letra,
-            def: document.getElementById(`edit-def-${i}`).value,
-            resp: document.getElementById(`edit-resp-${i}`).value
-        }));
-        set(ref(db, 'preguntas'), nuevas).then(() => alert("Rosco guardado en Firebase correctamente"));
-    };
 
     function escucharResultados() {
         onValue(ref(db, 'logs'), (snapshot) => {
